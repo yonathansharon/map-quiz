@@ -9,45 +9,61 @@
       font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(to bottom, #e0eafc, #cfdef3);
       margin: 0;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
+      text-align: center;
     }
+
     h1 {
       color: #333;
-      margin-bottom: 40px;
+      margin-bottom: 30px;
+      font-size: 2em;
     }
+
     .btn-container {
       display: flex;
-      gap: 20px;
       flex-wrap: wrap;
       justify-content: center;
+      gap: 15px;
+      width: 100%;
+      max-width: 400px;
     }
+
     .map-btn {
-      padding: 15px 30px;
-      font-size: 1.2em;
+      flex: 1 1 100%;
+      padding: 14px 20px;
+      font-size: 1.1em;
       cursor: pointer;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       background-color: #0077cc;
       color: white;
-      transition: background 0.3s, transform 0.2s;
       text-decoration: none;
+      transition: background 0.3s, transform 0.2s;
     }
+
     .map-btn:hover {
       background-color: #005fa3;
-      transform: scale(1.05);
+      transform: scale(1.03);
+    }
+
+    @media (min-width: 600px) {
+      .map-btn {
+        flex: 1 1 calc(50% - 10px);
+      }
     }
   </style>
 </head>
 <body>
-  <h1>🗺️ Choose a Map to Play</h1>
+  <h1>🌍 Choose a Map to Play</h1>
   <div class="btn-container">
     <a href="index_usa.html" class="map-btn">🇺🇸 United States</a>
     <a href="index-europe.html" class="map-btn">🇪🇺 Europe</a>
-    <a href="index-asia.html" class="map-btn">🌏 Asia (soon)</a>
+    <a href="index-asia.html" class="map-btn">🌏 Asia (coming soon)</a>
   </div>
 </body>
 </html>
