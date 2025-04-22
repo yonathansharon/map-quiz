@@ -20,7 +20,7 @@
     #map-container {
       width: 100%;
       max-width: 900px;
-      height: 500px;
+      aspect-ratio: 3/2;
       position: relative;
     }
 
@@ -28,6 +28,7 @@
       border: 1px solid #ccc;
       width: 100%;
       height: 100%;
+      display: block;
     }
 
     path {
@@ -70,7 +71,6 @@
       border-radius: 5px;
       font-size: 0.95em;
       user-select: none;
-      position: relative;
     }
 
     .matched {
@@ -108,26 +108,13 @@
     #restart-button:hover {
       background-color: #005fa3;
     }
-
-    @media (max-width: 600px) {
-      #map-container {
-        height: 300px;
-      }
-
-      #country-list {
-        max-height: 120px;
-        font-size: 0.85em;
-      }
-
-      #restart-button {
-        font-size: 0.95em;
-        padding: 8px 14px;
-      }
-    }
   </style>
 </head>
 <body>
-  <div id="map-container"><svg></svg></div>
+  <div id="map-container">
+    <svg viewBox="0 0 900 600" preserveAspectRatio="xMidYMid meet"></svg>
+  </div>
+
   <ul id="country-list"></ul>
   <div id="feedback"></div>
   <div id="scoreboard">
@@ -150,40 +137,39 @@
       "AZ": "Azerbaijan", "AM": "Armenia", "IL": "Israel", "LI": "Liechtenstein", "FO": "Faroe Islands",
       "AD": "Andorra", "MC": "Monaco", "ME": "Montenegro", "SM": "San Marino", "VA": "Vatican City"
     };
-  
-    const mapContainer = d3.select('#map-container');
+
     const svg = d3.select('svg');
-    const width = mapContainer.node().getBoundingClientRect().width;
-    const height = mapContainer.node().getBoundingClientRect().height;
-  
+    const width = 900;
+    const height = 600;
+
     const projection = d3.geoMercator()
       .center([20, 55])
       .scale(600)
       .translate([width / 2, height / 2]);
-  
+
     const path = d3.geoPath().projection(projection);
-  
+
     let selectedCountry = null;
     let score = 0;
     let attempts = 0;
     let correctGuesses = 0;
-  
+
     d3.json('data/europe.topojson').then(data => {
-        const countries = topojson.feature(data, data.objects.europe).features;
-  
+      const countries = topojson.feature(data, data.objects.europe).features;
+
       const countryPaths = svg.selectAll('path')
         .data(countries)
         .enter().append('path')
         .attr('d', path)
         .attr('id', d => 'country-' + d.id);
-  
+
       const countryList = d3.select('#country-list');
       const countryNames = countries.map(d => ({
         id: d.id,
         name: nameMap[d.id] || d.id,
         centroid: path.centroid(d)
       }));
-  
+
       const countryItems = countryList.selectAll('li')
         .data(countryNames)
         .enter().append('li')
@@ -197,7 +183,7 @@
             d3.select('#feedback').text('');
           }
         });
-  
+
       countryPaths.on('click', function(d) {
         const feedbackElement = d3.select('#feedback');
         if (selectedCountry) {
@@ -212,7 +198,7 @@
             const matchedItem = d3.select('#country-' + selectedCountry.id);
             matchedItem.classed('matched', true).classed('selected', false).on('click', null);
             selectedCountry = null;
-  
+
             if (correctGuesses === countryNames.length) {
               d3.select('#victory-message')
                 .text(`🎉 You won! Final score: ${score} in ${attempts} attempts.`)
@@ -225,8 +211,9 @@
           feedbackElement.text('Please select a country name first.').classed('error', true);
         }
       });
-  
+
       d3.select('#restart-button').on('click', () => location.reload());
     });
   </script>
-  
+</body>
+</html>
