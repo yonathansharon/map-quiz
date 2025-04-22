@@ -150,40 +150,40 @@
       "AZ": "Azerbaijan", "AM": "Armenia", "IL": "Israel", "LI": "Liechtenstein", "FO": "Faroe Islands",
       "AD": "Andorra", "MC": "Monaco", "ME": "Montenegro", "SM": "San Marino", "VA": "Vatican City"
     };
-
+  
     const mapContainer = d3.select('#map-container');
     const svg = d3.select('svg');
     const width = mapContainer.node().getBoundingClientRect().width;
     const height = mapContainer.node().getBoundingClientRect().height;
-
+  
     const projection = d3.geoMercator()
       .center([20, 55])
       .scale(600)
       .translate([width / 2, height / 2]);
-
+  
     const path = d3.geoPath().projection(projection);
-
+  
     let selectedCountry = null;
     let score = 0;
     let attempts = 0;
     let correctGuesses = 0;
-
+  
     d3.json('data/europe.topojson').then(data => {
-      const countries = topojson.feature(data, data.objects.europe).features;
-
+        const countries = topojson.feature(data, data.objects.europe).features;
+  
       const countryPaths = svg.selectAll('path')
         .data(countries)
         .enter().append('path')
         .attr('d', path)
         .attr('id', d => 'country-' + d.id);
-
+  
       const countryList = d3.select('#country-list');
       const countryNames = countries.map(d => ({
         id: d.id,
         name: nameMap[d.id] || d.id,
         centroid: path.centroid(d)
       }));
-
+  
       const countryItems = countryList.selectAll('li')
         .data(countryNames)
         .enter().append('li')
@@ -197,7 +197,7 @@
             d3.select('#feedback').text('');
           }
         });
-
+  
       countryPaths.on('click', function(d) {
         const feedbackElement = d3.select('#feedback');
         if (selectedCountry) {
@@ -212,7 +212,7 @@
             const matchedItem = d3.select('#country-' + selectedCountry.id);
             matchedItem.classed('matched', true).classed('selected', false).on('click', null);
             selectedCountry = null;
-
+  
             if (correctGuesses === countryNames.length) {
               d3.select('#victory-message')
                 .text(`🎉 You won! Final score: ${score} in ${attempts} attempts.`)
@@ -225,9 +225,8 @@
           feedbackElement.text('Please select a country name first.').classed('error', true);
         }
       });
-
+  
       d3.select('#restart-button').on('click', () => location.reload());
     });
   </script>
-</body>
-</html>
+  
