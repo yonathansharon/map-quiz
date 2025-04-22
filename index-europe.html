@@ -18,10 +18,25 @@
       color: #fff;
     }
 
+    #restart-button {
+      margin: 10px auto;
+      padding: 10px 18px;
+      font-size: 1em;
+      cursor: pointer;
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    #restart-button:hover {
+      background-color: #005fa3;
+    }
+
     #map-container {
       width: 100%;
       max-width: 900px;
-      aspect-ratio: 2 / 1;
+      aspect-ratio: 2.2 / 1;
       position: relative;
       background: #0a0a0a;
     }
@@ -98,19 +113,11 @@
       font-size: 1em;
     }
 
-    #restart-button {
+    #victory-message {
+      display: none;
+      font-size: 1.2em;
+      color: lightgreen;
       margin-top: 10px;
-      padding: 10px 18px;
-      font-size: 1em;
-      cursor: pointer;
-      background-color: #0077cc;
-      color: white;
-      border: none;
-      border-radius: 5px;
-    }
-
-    #restart-button:hover {
-      background-color: #005fa3;
     }
 
     @media (max-width: 600px) {
@@ -122,6 +129,8 @@
   </style>
 </head>
 <body>
+  <button id="restart-button">Restart Game</button>
+
   <div id="map-container">
     <svg viewBox="0 0 900 450" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
@@ -132,8 +141,7 @@
     <strong>Score:</strong> <span id="score">0</span> |
     <strong>Attempts:</strong> <span id="attempts">0</span>
   </div>
-  <button id="restart-button">Restart Game</button>
-  <div id="victory-message" style="display: none; font-size: 1.2em; color: lightgreen; margin-top: 10px;"></div>
+  <div id="victory-message"></div>
 
   <script>
     const nameMap = {
