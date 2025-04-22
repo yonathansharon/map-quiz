@@ -21,7 +21,7 @@
     #map-container {
       width: 100%;
       max-width: 900px;
-      aspect-ratio: 3 / 2;
+      aspect-ratio: 2 / 1;
       position: relative;
       background: #0a0a0a;
     }
@@ -112,11 +112,18 @@
     #restart-button:hover {
       background-color: #005fa3;
     }
+
+    @media (max-width: 600px) {
+      #country-list {
+        font-size: 0.8em;
+        max-height: 120px;
+      }
+    }
   </style>
 </head>
 <body>
   <div id="map-container">
-    <svg viewBox="0 0 900 600" preserveAspectRatio="xMidYMid meet"></svg>
+    <svg viewBox="0 0 900 450" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 
   <ul id="country-list"></ul>
@@ -144,11 +151,11 @@
 
     const svg = d3.select('svg');
     const width = 900;
-    const height = 600;
+    const height = 450;
 
     const projection = d3.geoMercator()
       .center([20, 55])
-      .scale(500)
+      .scale(450)
       .translate([width / 2, height / 2]);
 
     const path = d3.geoPath().projection(projection);
