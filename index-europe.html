@@ -18,18 +18,19 @@
     }
 
     #map-container {
-      width: 100%;
-      max-width: 900px;
-      aspect-ratio: 3/2;
-      position: relative;
-    }
+  width: 100%;
+  position: relative;
+  padding-top: 66.66%; /* יחס גובה-רוחב 3:2 */
+}
 
-    svg {
-      border: 1px solid #ccc;
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
+svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 1px solid #ccc;
+}
 
     path {
       fill: #f0f0f0;
