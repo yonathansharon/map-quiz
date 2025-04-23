@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Europe Map Quiz</title>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+  <style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%; /* Ensure html and body can potentially fill height */
+    }
+    body {
+      font-family: sans-serif;
+      padding: 20px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #0a0a0a;
+      color: #fff;
+      min-height: 100vh; /* Ensure body takes at least full viewport height */
+      box-sizing: border-box; /* Include padding in height calculation */
+    }
+
+    h1 {
+        margin-bottom: 15px;
+        text-align: center;
+        color: #eee; /* Lighter heading */
+    }
+
+    #restart-button {
+      margin: 10px auto;
+      padding: 10px 18px;
+      font-size: 1em;
+      cursor: pointer;
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+
+    #restart-button:hover {
+      background-color: #005fa3;
+    }
+
+    #map-container {
+      width: 100%;
+      max-width: 900px;
+      aspect-ratio: 2 / 1; /* Default aspect ratio for wider screens */
+      position: relative;
+      background: #0a0a0a;
+      margin-bottom: 15px; /* Space below map */
+      flex-shrink: 0; /* Prevent map container from shrinking if space is tight */
+    }
+
+    svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 1px solid #555; /* Darker border */
+    }
+
+    path.country { /* Be more specific */
+      fill: #ccc; /* Lighter default fill */
+      stroke: #333;
+      stroke-width: 0.5px;
+      transition: fill 0.2s ease;
+    }
+
+    path.country:hover {
+      fill: steelblue;
+      cursor: pointer;
+    }
+
+    path.guessed {
+      stroke: #0077cc !important;
+      stroke-width: 2px !important; /* Slightly thinner stroke for guessed */
+      fill: #777 !important; /* Distinct grey for guessed */
+      cursor: default; /* Indicate non-interactive */
+    }
+
+    #country-list {
+      list-style: none;
+      padding: 10px;
+      margin: 0 auto 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      width: 90%;
+      max-width: 900px;
+      max-height: 160px; /* Base max height for desktop */
+      overflow-y: auto;
+      background-color: #1f1f1f; /* Slightly lighter background for the list */
+      border-radius: 5px;
+      flex-shrink: 0; /* Prevent list from shrinking */
+    }
+
+    #country-list li {
+      background-color: #3a3a3a;
+      border: 1px solid #555;
+      color: #fff;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 0.9em; /* Slightly smaller base font */
+      user-select: none;
+      transition: background-color 0.2s ease;
+      text-align: center; /* Center text in list items */
+    }
+
+     #country-list li:hover:not(.matched):not(.selected) {
+         background-color: #555;
+     }
+
+    .matched {
+      background-color: #28a745;
+      border-color: #1e7e34;
+      color: #fff;
+      cursor: not-allowed;
+      opacity: 0.8; /* Slightly less opaque */
+    }
+
+    .selected {
+      background-color: #007bff;
+      border-color: #0056b3;
+      color: white;
+    }
+
+    #feedback {
+        margin-top: 10px; /* Reduced margin */
+        min-height: 1.2em;
+        font-weight: bold;
+        text-align: center;
+        width: 90%; /* Ensure feedback text can wrap */
+        max-width: 900px;
+    }
+
+    .error {
+      color: #dc3545; /* Bootstrap red */
+    }
+
+    .correct {
+        color: #28a745; /* Bootstrap green */
+    }
+
+    #scoreboard {
+      margin-top: 10px;
+      font-size: 1em;
+      text-align: center;
+    }
+
+    #victory-message {
+      display: none;
+      font-size: 1.2em;
+      color: #28a745;
+      margin-top: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      /* ... (h1, button, map-container adjustments remain the same) ... */
+
+      #country-list {
+        font-size: 0.75em;
+        /* max-height: 20vh; */ /* Previous value */
+        max-height: 35vh; /* Allow more potential height relative to viewport */
+        gap: 5px;
+        width: 95%;
+        padding: 8px;
+        flex-grow: 1; /* Allow the list container to grow vertically */
+        min-height: 100px; /* Prevent collapsing if few items / lots of space */
+        /* overflow-y: auto; is inherited and crucial here */
+      }
+
+      h1 {
+          font-size: 1.4em;
+          margin-bottom: 10px;
+      }
+
+      #restart-button {
+        font-size: 0.9em;
+        padding: 8px 15px;
+        margin-top: 5px; /* Reduce top margin */
+      }
+
+      #map-container {
+          margin-bottom: 10px;
+          aspect-ratio: 3 / 2; /* Taller aspect ratio for mobile (adjust as needed) */
+      }
+
+      path.country {
+          stroke-width: 0.8px; /* Slightly thicker stroke on mobile for visibility */
+      }
+       path.guessed {
+           stroke-width: 1.5px !important; /* Adjust guessed stroke */
+       }
+
+
+       #country-list {
+        font-size: 0.75em;
+        /* max-height: 20vh; */ /* Previous value */
+        max-height: 35vh; /* Allow more potential height relative to viewport */
+        gap: 5px;
+        width: 95%;
+        padding: 8px;
+        flex-grow: 1; /* Allow the list container to grow vertically */
+        /* Add min-height to prevent it collapsing too much if space is abundant */
+        min-height: 100px; 
+    }
+
+      #country-list li {
+        padding: 5px 8px; /* Smaller padding */
+      }
+
+       #scoreboard, #feedback, #victory-message {
+         font-size: 0.9em;
+         width: 95%;
+         margin-top: 8px; /* Consistent smaller margin */
+       }
+       #feedback { min-height: 1.1em; }
+
+       #victory-message {
+         font-size: 1.1em;
+         margin-top: 10px;
+       }
+    }
+  </style>
+</head>
+<body> <h1>Europe Map Quiz</h1>
+  <button id="restart-button">Restart Game</button>
+
+  <div id="map-container">
+    <svg viewBox="0 0 900 450" preserveAspectRatio="xMidYMid meet"></svg>
+  </div>
+
+  <ul id="country-list"></ul>
+  <div id="feedback"></div>
+  <div id="scoreboard">
+    <strong>Score:</strong> <span id="score">0</span> |
+    <strong>Attempts:</strong> <span id="attempts">0</span>
+  </div>
+  <div id="victory-message"></div>
+
+  <script>
+    // --- Map data ---
+    const nameMap = { // Using standard English names
+      "AL": "Albania", "AT": "Austria", "BE": "Belgium", "BG": "Bulgaria", "HR": "Croatia",
+      "CY": "Cyprus", "CZ": "Czech Republic", "DK": "Denmark", "EE": "Estonia", "FI": "Finland",
+      "FR": "France", "DE": "Germany", "GR": "Greece", "HU": "Hungary", "IS": "Iceland",
+      "IE": "Ireland", "IT": "Italy", "LV": "Latvia", "LT": "Lithuania", "LU": "Luxembourg",
+      "MT": "Malta", "NL": "Netherlands", "NO": "Norway", "PL": "Poland", "PT": "Portugal",
+      "RO": "Romania", "SK": "Slovakia", "SI": "Slovenia", "ES": "Spain", "SE": "Sweden",
+      "CH": "Switzerland", "GB": "United Kingdom", "UA": "Ukraine", "RS": "Serbia", "BA": "Bosnia and Herzegovina",
+      "MD": "Moldova", "MK": "North Macedonia", "BY": "Belarus", "RU": "Russia", "TR": "Turkey",
+      "LI": "Liechtenstein", "AD": "Andorra", "MC": "Monaco", "ME": "Montenegro", "SM": "San Marino", "VA": "Vatican City",
+      "AZ": "Azerbaijan", "AM": "Armenia", "GE": "Georgia"
+      // Add others if needed based on your TopoJSON
+    };
+
+    // --- D3 Setup ---
+    const svg = d3.select('svg');
+
+   // ***** MORE AGGRESSIVE PROJECTION ADJUSTMENT *****
+    const projection = d3.geoMercator()
+      .center([15, 48]) // Center further South/West (e.g., around Austria/Alps)
+      .scale(600)      // Significantly reduce scale (zoom out more)
+      .translate([450, 210]); // Push map higher up (smaller Y value) in the 900x450 viewBox
+    // ***********************************************
+
+    const pathGenerator = d3.geoPath().projection(projection);
+
+    // ... (Rest of the script remains the same: Game State, DOM Selections, Load Data, Handlers, etc.) ...
+
+
+    // --- Game State Variables ---
+    let selectedCountryData = null;
+    let score = 0;
+    let attempts = 0;
+    let correctGuesses = 0;
+    let totalCountries = 0;
+
+    // --- DOM Element Selections ---
+    const countryListElement = d3.select('#country-list');
+    const feedbackElement = d3.select('#feedback');
+    const scoreElement = d3.select('#score');
+    const attemptsElement = d3.select('#attempts');
+    const victoryMessageElement = d3.select('#victory-message');
+    const restartButton = d3.select('#restart-button');
+
+    // --- Load Map Data and Initialize Game ---
+    d3.json('data/europe.topojson').then(topoData => {
+      // Ensure the object name 'europe' matches your file structure
+      if (!topoData.objects.europe) {
+          console.error("TopoJSON file structure error: 'objects.europe' not found.");
+          feedbackElement.text("Error: Invalid map data structure.").classed('error', true);
+          return; // Stop execution if data structure is wrong
+      }
+      const countryFeatures = topojson.feature(topoData, topoData.objects.europe).features;
+
+      const validCountries = countryFeatures.filter(d => d.id && nameMap[d.id]); // Ensure ID exists and is in nameMap
+      totalCountries = validCountries.length;
+
+       if (totalCountries === 0) {
+           console.error("No valid countries found matching the nameMap.");
+           feedbackElement.text("Error: No valid countries found in map data.").classed('error', true);
+           return;
+       }
+
+       // --- Draw Map Paths ---
+       const countryPaths = svg.selectAll('path.country')
+         .data(validCountries, d => d.id)
+         .enter().append('path')
+         .attr('class', 'country')
+         .attr('d', pathGenerator)
+         .attr('id', d => `map-${d.id}`)
+         .on('click', handleMapClick);
+
+      // --- Populate Country List ---
+      const countryListData = validCountries.map(d => ({
+        id: d.id,
+        name: nameMap[d.id]
+      })).sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically by name
+
+      const countryListItems = countryListElement.selectAll('li')
+        .data(countryListData, d => d.id)
+        .enter().append('li')
+        .attr('id', d => `list-${d.id}`)
+        .text(d => d.name)
+        .on('click', handleListClick);
+
+      // --- Initialize Scoreboard ---
+      updateScoreboard();
+
+    }).catch(error => {
+        console.error('Error loading or processing TopoJSON:', error);
+        feedbackElement.text('Error loading map data. Check console.').classed('error', true);
+    });
+
+    // --- Event Handlers ---
+
+    function handleListClick(d) {
+      const listItem = d3.select(this);
+      if (listItem.classed('matched')) return;
+
+      countryListElement.selectAll('li').classed('selected', false);
+      listItem.classed('selected', true);
+      selectedCountryData = { id: d.id, name: d.name, element: listItem };
+      feedbackElement.text('').classed('error', false).classed('correct', false);
+    }
+
+    function handleMapClick(d) {
+      const clickedPath = d3.select(this);
+      if (clickedPath.classed('guessed')) return;
+
+      if (selectedCountryData) {
+        attempts++;
+        const correctId = selectedCountryData.id;
+        const clickedId = d.id; // ID from the clicked map feature
+
+         // Ensure the clicked feature has a name in our map
+         const clickedName = nameMap[clickedId] || "this area";
+
+        if (clickedId === correctId) {
+          // --- Correct Guess ---
+          score += 10;
+          correctGuesses++;
+          feedbackElement.text('Correct!').classed('correct', true).classed('error', false);
+
+          clickedPath.classed('guessed', true).style('pointer-events', 'none');
+          selectedCountryData.element.classed('matched', true)
+                                   .classed('selected', false)
+                                   .on('click', null); // Prevent re-clicking list item
+
+          selectedCountryData = null; // Reset selection
+
+          // Check for victory
+          if (correctGuesses === totalCountries) {
+            victoryMessageElement
+              .text(`🎉 You won! Final score: ${score} in ${attempts} attempts.`)
+              .style('display', 'block');
+          }
+
+        } else {
+          // --- Incorrect Guess ---
+          // Provide feedback about what was actually clicked
+          feedbackElement.text(`Incorrect. That was ${clickedName}. Try again.`).classed('error', true).classed('correct', false);
+        }
+
+        updateScoreboard();
+
+      } else {
+        // --- No country name selected ---
+        feedbackElement.text('Please select a country name from the list first.').classed('error', true).classed('correct', false);
+      }
+    }
+
+    // --- Update UI Functions ---
+    function updateScoreboard() {
+      scoreElement.text(score);
+      attemptsElement.text(attempts);
+    }
+
+    // --- Restart Button ---
+    restartButton.on('click', () => location.reload());
+
+  </script>
+</body>
+</html>
