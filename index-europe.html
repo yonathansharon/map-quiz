@@ -7,27 +7,15 @@
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
   <style>
-    html, body {
-        margin: 0;
-        padding: 0;
-        height: 100%; /* Ensure html and body can potentially fill height */
-    }
     body {
       font-family: sans-serif;
-      padding: 20px 10px;
+      margin: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      background-color: #0a0a0a;
+      background-color: #0a0a0a;  /* רקע מאחורי המפה */
       color: #fff;
-      min-height: 100vh; /* Ensure body takes at least full viewport height */
-      box-sizing: border-box; /* Include padding in height calculation */
-    }
-
-    h1 {
-        margin-bottom: 15px;
-        text-align: center;
-        color: #eee; /* Lighter heading */
     }
 
     #restart-button {
@@ -39,7 +27,6 @@
       color: white;
       border: none;
       border-radius: 5px;
-      transition: background-color 0.3s ease;
     }
 
     #restart-button:hover {
@@ -48,183 +35,101 @@
 
     #map-container {
       width: 100%;
-      max-width: 900px;
-      aspect-ratio: 2 / 1; /* Default aspect ratio for wider screens */
-      position: relative;
-      background: #0a0a0a;
-      margin-bottom: 15px; /* Space below map */
-      flex-shrink: 0; /* Prevent map container from shrinking if space is tight */
+      max-width: 1000px;
+      background-color: #0a0a0a;
     }
 
     svg {
-      position: absolute;
-      top: 0;
-      left: 0;
       width: 100%;
-      height: 100%;
-      border: 1px solid #555; /* Darker border */
+      height: auto;
+      border: 1px solid #ccc;
     }
 
-    path.country { /* Be more specific */
-      fill: #ccc; /* Lighter default fill */
-      stroke: #333;
-      stroke-width: 0.5px;
-      transition: fill 0.2s ease;
+    path {
+        fill: #f0f0f0;         /* צבע פנימי של כל מדינה */
+      stroke: #333;          /* צבע קו הגבול */
+      stroke-width: 0.5px;   /* עובי קו הגבול */
+      transition: all 0.3s ease;
     }
 
-    path.country:hover {
+    path:hover {
       fill: steelblue;
       cursor: pointer;
     }
 
-    path.guessed {
+    .guessed {
       stroke: #0077cc !important;
-      stroke-width: 2px !important; /* Slightly thinner stroke for guessed */
-      fill: #777 !important; /* Distinct grey for guessed */
-      cursor: default; /* Indicate non-interactive */
+      stroke-width: 3px !important;
+      fill-opacity: 1 !important;
     }
 
     #country-list {
       list-style: none;
-      padding: 10px;
-      margin: 0 auto 10px;
+      padding: 0;
+      margin: 20px auto 10px;
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 8px;
-      width: 90%;
-      max-width: 900px;
-      max-height: 160px; /* Base max height for desktop */
+      width: 95%;
+      max-width: 1000px;
+      max-height: 180px;
       overflow-y: auto;
-      background-color: #1f1f1f; /* Slightly lighter background for the list */
-      border-radius: 5px;
-      flex-shrink: 0; /* Prevent list from shrinking */
     }
 
     #country-list li {
-      background-color: #3a3a3a;
-      border: 1px solid #555;
-      color: #fff;
+      background-color: #000;
+      border: 1px solid #aaa;
       padding: 8px 12px;
       cursor: pointer;
       border-radius: 5px;
-      font-size: 0.9em; /* Slightly smaller base font */
+      font-size: 0.95em;
       user-select: none;
-      transition: background-color 0.2s ease;
-      text-align: center; /* Center text in list items */
+      color: #fff;
     }
 
-     #country-list li:hover:not(.matched):not(.selected) {
-         background-color: #555;
-     }
+    #country-list li.selected {
+      background-color: #0077cc;
+      color: #fff;
+    }
 
     .matched {
-      background-color: #28a745;
-      border-color: #1e7e34;
-      color: #fff;
+      background-color: lightgreen;
+      border-color: green;
+      color: gray;
       cursor: not-allowed;
-      opacity: 0.8; /* Slightly less opaque */
-    }
-
-    .selected {
-      background-color: #007bff;
-      border-color: #0056b3;
-      color: white;
-    }
-
-    #feedback {
-        margin-top: 10px; /* Reduced margin */
-        min-height: 1.2em;
-        font-weight: bold;
-        text-align: center;
-        width: 90%; /* Ensure feedback text can wrap */
-        max-width: 900px;
     }
 
     .error {
-      color: #dc3545; /* Bootstrap red */
-    }
-
-    .correct {
-        color: #28a745; /* Bootstrap green */
+      color: red;
+      margin-top: 10px;
     }
 
     #scoreboard {
       margin-top: 10px;
       font-size: 1em;
-      text-align: center;
     }
 
     #victory-message {
       display: none;
       font-size: 1.2em;
-      color: #28a745;
-      margin-top: 15px;
-      text-align: center;
-      font-weight: bold;
+      color: lightgreen;
+      margin-top: 10px;
     }
 
-    /* Responsive adjustments */
     @media (max-width: 600px) {
-      body {
-          padding: 10px 5px; /* Further reduce padding */
-      }
-
-      h1 {
-          font-size: 1.4em;
-          margin-bottom: 10px;
-      }
-
-      #restart-button {
-        font-size: 0.9em;
-        padding: 8px 15px;
-        margin-top: 5px; /* Reduce top margin */
-      }
-
-      #map-container {
-          margin-bottom: 10px;
-          aspect-ratio: 3 / 2; /* Taller aspect ratio for mobile (adjust as needed) */
-      }
-
-      path.country {
-          stroke-width: 0.8px; /* Slightly thicker stroke on mobile for visibility */
-      }
-       path.guessed {
-           stroke-width: 1.5px !important; /* Adjust guessed stroke */
-       }
-
-
       #country-list {
-        font-size: 0.75em; /* Adjust font size */
-        max-height: 20vh; /* Max height relative to viewport height */
-        gap: 5px;
-        width: 95%;
-        padding: 8px;
+        font-size: 0.8em;
+        max-height: 120px;
       }
-
-      #country-list li {
-        padding: 5px 8px; /* Smaller padding */
-      }
-
-       #scoreboard, #feedback, #victory-message {
-         font-size: 0.9em;
-         width: 95%;
-         margin-top: 8px; /* Consistent smaller margin */
-       }
-       #feedback { min-height: 1.1em; }
-
-       #victory-message {
-         font-size: 1.1em;
-         margin-top: 10px;
-       }
     }
   </style>
 </head>
-<body> <h1>Europe Map Quiz</h1>
+<body>
   <button id="restart-button">Restart Game</button>
 
   <div id="map-container">
-    <svg viewBox="0 0 900 450" preserveAspectRatio="xMidYMid meet"></svg>
+    <svg viewBox="0 0 960 660" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 
   <ul id="country-list"></ul>
@@ -236,8 +141,7 @@
   <div id="victory-message"></div>
 
   <script>
-    // --- Map data ---
-    const nameMap = { // Using standard English names
+    const nameMap = {
       "AL": "Albania", "AT": "Austria", "BE": "Belgium", "BG": "Bulgaria", "HR": "Croatia",
       "CY": "Cyprus", "CZ": "Czech Republic", "DK": "Denmark", "EE": "Estonia", "FI": "Finland",
       "FR": "France", "DE": "Germany", "GR": "Greece", "HU": "Hungary", "IS": "Iceland",
@@ -246,150 +150,86 @@
       "RO": "Romania", "SK": "Slovakia", "SI": "Slovenia", "ES": "Spain", "SE": "Sweden",
       "CH": "Switzerland", "GB": "United Kingdom", "UA": "Ukraine", "RS": "Serbia", "BA": "Bosnia and Herzegovina",
       "MD": "Moldova", "MK": "North Macedonia", "BY": "Belarus", "RU": "Russia", "TR": "Turkey",
-      "LI": "Liechtenstein", "AD": "Andorra", "MC": "Monaco", "ME": "Montenegro", "SM": "San Marino", "VA": "Vatican City",
-      "AZ": "Azerbaijan", "AM": "Armenia", "GE": "Georgia"
-      // Add others if needed based on your TopoJSON
+      "AZ": "Azerbaijan", "AM": "Armenia", "IL": "Israel", "LI": "Liechtenstein", "FO": "Faroe Islands",
+      "AD": "Andorra", "MC": "Monaco", "ME": "Montenegro", "SM": "San Marino", "VA": "Vatican City"
     };
 
-    // --- D3 Setup ---
-    const svg = d3.select('svg');
+    const svg = d3.select("svg");
+    const width = 960;
+    const height = 600;
+
     const projection = d3.geoMercator()
       .center([20, 55])
-      .scale(500) // Adjust scale if needed
-      .translate([450, 250]); // Center in default 900x450 viewbox
-    const pathGenerator = d3.geoPath().projection(projection);
+      .scale(600)
+      .translate([width / 2, height / 2]);
 
-    // --- Game State Variables ---
-    let selectedCountryData = null;
+    const path = d3.geoPath().projection(projection);
+
+    let selectedCountry = null;
     let score = 0;
     let attempts = 0;
     let correctGuesses = 0;
-    let totalCountries = 0;
 
-    // --- DOM Element Selections ---
-    const countryListElement = d3.select('#country-list');
-    const feedbackElement = d3.select('#feedback');
-    const scoreElement = d3.select('#score');
-    const attemptsElement = d3.select('#attempts');
-    const victoryMessageElement = d3.select('#victory-message');
-    const restartButton = d3.select('#restart-button');
+    d3.json('data/europe.topojson').then(data => {
+      const countries = topojson.feature(data, data.objects.europe).features;
 
-    // --- Load Map Data and Initialize Game ---
-    d3.json('data/europe.topojson').then(topoData => {
-      // Ensure the object name 'europe' matches your file structure
-      if (!topoData.objects.europe) {
-          console.error("TopoJSON file structure error: 'objects.europe' not found.");
-          feedbackElement.text("Error: Invalid map data structure.").classed('error', true);
-          return; // Stop execution if data structure is wrong
-      }
-      const countryFeatures = topojson.feature(topoData, topoData.objects.europe).features;
+      const countryPaths = svg.selectAll('path')
+        .data(countries)
+        .enter().append('path')
+        .attr('d', path)
+        .attr('id', d => 'country-' + d.id);
 
-      const validCountries = countryFeatures.filter(d => d.id && nameMap[d.id]); // Ensure ID exists and is in nameMap
-      totalCountries = validCountries.length;
-
-       if (totalCountries === 0) {
-           console.error("No valid countries found matching the nameMap.");
-           feedbackElement.text("Error: No valid countries found in map data.").classed('error', true);
-           return;
-       }
-
-       // --- Draw Map Paths ---
-       const countryPaths = svg.selectAll('path.country')
-         .data(validCountries, d => d.id)
-         .enter().append('path')
-         .attr('class', 'country')
-         .attr('d', pathGenerator)
-         .attr('id', d => `map-${d.id}`)
-         .on('click', handleMapClick);
-
-      // --- Populate Country List ---
-      const countryListData = validCountries.map(d => ({
+      const countryList = d3.select('#country-list');
+      const countryNames = countries.map(d => ({
         id: d.id,
-        name: nameMap[d.id]
-      })).sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically by name
+        name: nameMap[d.id] || d.id,
+        centroid: path.centroid(d)
+      }));
 
-      const countryListItems = countryListElement.selectAll('li')
-        .data(countryListData, d => d.id)
+      const countryItems = countryList.selectAll('li')
+        .data(countryNames)
         .enter().append('li')
-        .attr('id', d => `list-${d.id}`)
+        .attr('id', d => 'country-' + d.id)
         .text(d => d.name)
-        .on('click', handleListClick);
-
-      // --- Initialize Scoreboard ---
-      updateScoreboard();
-
-    }).catch(error => {
-        console.error('Error loading or processing TopoJSON:', error);
-        feedbackElement.text('Error loading map data. Check console.').classed('error', true);
-    });
-
-    // --- Event Handlers ---
-
-    function handleListClick(d) {
-      const listItem = d3.select(this);
-      if (listItem.classed('matched')) return;
-
-      countryListElement.selectAll('li').classed('selected', false);
-      listItem.classed('selected', true);
-      selectedCountryData = { id: d.id, name: d.name, element: listItem };
-      feedbackElement.text('').classed('error', false).classed('correct', false);
-    }
-
-    function handleMapClick(d) {
-      const clickedPath = d3.select(this);
-      if (clickedPath.classed('guessed')) return;
-
-      if (selectedCountryData) {
-        attempts++;
-        const correctId = selectedCountryData.id;
-        const clickedId = d.id; // ID from the clicked map feature
-
-         // Ensure the clicked feature has a name in our map
-         const clickedName = nameMap[clickedId] || "this area";
-
-        if (clickedId === correctId) {
-          // --- Correct Guess ---
-          score += 10;
-          correctGuesses++;
-          feedbackElement.text('Correct!').classed('correct', true).classed('error', false);
-
-          clickedPath.classed('guessed', true).style('pointer-events', 'none');
-          selectedCountryData.element.classed('matched', true)
-                                   .classed('selected', false)
-                                   .on('click', null); // Prevent re-clicking list item
-
-          selectedCountryData = null; // Reset selection
-
-          // Check for victory
-          if (correctGuesses === totalCountries) {
-            victoryMessageElement
-              .text(`🎉 You won! Final score: ${score} in ${attempts} attempts.`)
-              .style('display', 'block');
+        .on('click', function(d) {
+          if (!d3.select(this).classed('matched')) {
+            countryList.selectAll('li').classed('selected', false);
+            d3.select(this).classed('selected', true);
+            selectedCountry = d;
+            d3.select('#feedback').text('');
           }
+        });
 
+      countryPaths.on('click', function(d) {
+        const feedbackElement = d3.select('#feedback');
+        if (selectedCountry) {
+          attempts++;
+          d3.select('#attempts').text(attempts);
+          if (nameMap[d.id] === selectedCountry.name) {
+            score += 10;
+            correctGuesses++;
+            d3.select('#score').text(score);
+            feedbackElement.text('Correct!').classed('error', false);
+            d3.select(this).classed('guessed', true).style('pointer-events', 'none');
+            const matchedItem = d3.select('#country-' + selectedCountry.id);
+            matchedItem.classed('matched', true).classed('selected', false).on('click', null);
+            selectedCountry = null;
+
+            if (correctGuesses === countryNames.length) {
+              d3.select('#victory-message')
+                .text(`🎉 You won! Final score: ${score} in ${attempts} attempts.`)
+                .style('display', 'block');
+            }
+          } else {
+            feedbackElement.text('Incorrect! Try again.').classed('error', true);
+          }
         } else {
-          // --- Incorrect Guess ---
-          // Provide feedback about what was actually clicked
-          feedbackElement.text(`Incorrect. That was ${clickedName}. Try again.`).classed('error', true).classed('correct', false);
+          feedbackElement.text('Please select a country name first.').classed('error', true);
         }
+      });
 
-        updateScoreboard();
-
-      } else {
-        // --- No country name selected ---
-        feedbackElement.text('Please select a country name from the list first.').classed('error', true).classed('correct', false);
-      }
-    }
-
-    // --- Update UI Functions ---
-    function updateScoreboard() {
-      scoreElement.text(score);
-      attemptsElement.text(attempts);
-    }
-
-    // --- Restart Button ---
-    restartButton.on('click', () => location.reload());
-
+      d3.select('#restart-button').on('click', () => location.reload());
+    });
   </script>
 </body>
 </html>
