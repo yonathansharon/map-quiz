@@ -1,70 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Map Quiz - Choose a Region</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Map Quiz</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to bottom, #e0eafc, #cfdef3);
       margin: 0;
-      padding: 20px;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #1c1c1c);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
+      color: #ffffff;
       text-align: center;
     }
 
-    h1 {
-      color: #333;
-      margin-bottom: 30px;
-      font-size: 2em;
+    @keyframes gradientBG {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
     }
 
-    .btn-container {
+    h1 {
+      font-size: 2.8em;
+      margin-bottom: 40px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+    }
+
+    .card-container {
       display: flex;
       flex-wrap: wrap;
+      gap: 30px;
       justify-content: center;
-      gap: 15px;
-      width: 100%;
-      max-width: 400px;
     }
 
-    .map-btn {
-      flex: 1 1 100%;
-      padding: 14px 20px;
-      font-size: 1.1em;
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #ffffff33;
+      border-radius: 15px;
+      padding: 30px 40px;
+      width: 250px;
       cursor: pointer;
-      border: none;
-      border-radius: 8px;
-      background-color: #0077cc;
-      color: white;
-      text-decoration: none;
-      transition: background 0.3s, transform 0.2s;
+      transition: all 0.4s ease;
+      box-shadow: 0 8px 15px rgba(0,0,0,0.3);
     }
 
-    .map-btn:hover {
-      background-color: #005fa3;
-      transform: scale(1.03);
+    .card:hover {
+      transform: translateY(-10px);
+      background: rgba(255, 255, 255, 0.2);
+      border-color: #00c3ff;
     }
 
-    @media (min-width: 600px) {
-      .map-btn {
-        flex: 1 1 calc(50% - 10px);
+    .card h2 {
+      margin-top: 10px;
+      font-size: 1.6em;
+    }
+
+    .flag {
+      font-size: 3em;
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 0.9em;
+      color: #ccc;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2em;
+      }
+
+      .card {
+        width: 200px;
+        padding: 20px 30px;
+      }
+
+      .card h2 {
+        font-size: 1.4em;
       }
     }
   </style>
 </head>
 <body>
-  <h1>🌍 Choose a Map to Play</h1>
-  <div class="btn-container">
-    <a href="index_usa.html" class="map-btn">🇺🇸 United States</a>
-    <a href="index-europe.html" class="map-btn">🇪🇺 Europe</a>
-    <a href="index-asia.html" class="map-btn">🌏 Asia (coming soon)</a>
-    <a href="index-usa1.html" class="map-btn">🌏 USA1 (coming soon)</a>
+
+  <h1>🌍 Welcome to the World Map Quiz</h1>
+
+  <div class="card-container">
+    <div class="card" onclick="location.href='index-europe.html'">
+      <div class="flag">🇪🇺</div>
+      <h2>Europe Map</h2>
+    </div>
+    <div class="card" onclick="location.href='index-usa1.html'">
+      <div class="flag">🇺🇸</div>
+      <h2>USA Map</h2>
+    </div>
   </div>
+  <div class="card" onclick="location.href='index-europe1.html'">
+    <div class="flag">🇪🇺</div>
+    <h2>Europe Map1</h2>
+  </div>
+
+  <footer>© 2025 World Map Quiz Project</footer>
+
 </body>
 </html>
