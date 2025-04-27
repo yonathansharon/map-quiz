@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes" />
     <title>Europe Map Quiz</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
@@ -181,7 +181,7 @@
 
         // הגדרת זום
         const zoom = d3.zoom()
-            .scaleExtent([1, 8]) // מגבלות זום
+            .scaleExtent([1, 8]) // מגבלות זום - אפשר לשנות
             .on("zoom", function() {
                 svg.selectAll("path").attr("transform", d3.event.transform);
             });
@@ -247,6 +247,13 @@
             });
 
             d3.select('#restart-button').on('click', () => location.reload());
+
+            // איפוס זום בלחיצה כפולה על המפה
+            svg.on('dblclick.zoom', () => {
+                svg.transition()
+                    .duration(750)
+                    .call(zoom.transform, d3.zoomIdentity);
+            });
         });
     </script>
 </body>
