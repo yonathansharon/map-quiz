@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Europe Map Quiz</title>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
   <style>
     body {
-      font-family: 'Poppins', sans-serif;
       margin: 0;
       padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: #0a0a0a;
+      color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
-      background-color: #0a0a0a;
-      color: #fff;
     }
 
     #restart-button {
@@ -24,9 +24,10 @@
       font-size: 1em;
       cursor: pointer;
       background-color: #0077cc;
-      color: white;
       border: none;
       border-radius: 5px;
+      color: white;
+      transition: background-color 0.3s ease;
     }
 
     #restart-button:hover {
@@ -38,11 +39,38 @@
       max-width: 1000px;
       background-color: #eeeeee;
       overflow: hidden;
+      position: relative;
     }
 
     svg {
       width: 100%;
       height: auto;
+      touch-action: none; /* מאפשר זום עם שתי אצבעות! */
+    }
+
+    #zoom-buttons {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .zoom-btn {
+      background-color: #0077cc;
+      border: none;
+      color: white;
+      padding: 8px 12px;
+      font-size: 1.2em;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: transform 0.2s ease, background-color 0.3s ease;
+    }
+
+    .zoom-btn:hover {
+      transform: scale(1.1);
+      background-color: #005fa3;
     }
 
     path {
@@ -81,12 +109,12 @@
       background-color: #000;
       border: 1px solid #aaa;
       padding: 8px 12px;
-      cursor: pointer;
       border-radius: 5px;
       font-size: 0.95em;
       user-select: none;
       color: #fff;
-      transition: background-color 0.3s, color 0.3s;
+      cursor: pointer;
+      transition: background-color 0.3s ease, text-decoration 0.3s ease;
     }
 
     #country-list li.selected {
@@ -96,8 +124,8 @@
 
     #country-list li.matched {
       background-color: lightgreen;
-      border-color: green;
       color: gray;
+      text-decoration: line-through;
       cursor: not-allowed;
     }
 
@@ -131,6 +159,10 @@
   <button id="restart-button" onclick="location.reload()">Restart Game</button>
 
   <div id="map-container">
+    <div id="zoom-buttons">
+      <button class="zoom-btn" id="zoom-in">+</button>
+      <button class="zoom-btn" id="zoom-out">-</button>
+    </div>
     <svg viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 
@@ -160,7 +192,8 @@
     };
 
     const svg = d3.select("svg");
-    const width = 960;
+    const g = svg.append("g"); // קבוצה לכל המדינות
+    const width = 1000;
     const height = 600;
 
     const projection = d3.geoMercator()
@@ -175,10 +208,26 @@
     let attempts = 0;
     let correctGuesses = 0;
 
+    const zoom = d3.zoom()
+      .scaleExtent([1, 8])
+      .on('zoom', (event) => {
+        g.attr('transform', event.transform);
+      });
+
+    svg.call(zoom);
+
+    d3.select("#zoom-in").on("click", () => {
+      svg.transition().call(zoom.scaleBy, 1.2);
+    });
+
+    d3.select("#zoom-out").on("click", () => {
+      svg.transition().call(zoom.scaleBy, 0.8);
+    });
+
     d3.json('data/europe.topojson').then(data => {
       const countries = topojson.feature(data, data.objects.europe).features;
 
-      const countryPaths = svg.selectAll('path')
+      const countryPaths = g.selectAll('path')
         .data(countries)
         .enter().append('path')
         .attr('d', path)
