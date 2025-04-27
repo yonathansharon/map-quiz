@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Europe Map Quiz</title>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
@@ -45,7 +45,7 @@
     svg {
       width: 100%;
       height: auto;
-      touch-action: none; /* מאפשר זום עם שתי אצבעות! */
+      touch-action: none;
     }
 
     #zoom-buttons {
@@ -192,7 +192,7 @@
     };
 
     const svg = d3.select("svg");
-    const g = svg.append("g"); // קבוצה לכל המדינות
+    const g = svg.append("g"); // גרופ למפה
     const width = 1000;
     const height = 600;
 
@@ -217,11 +217,11 @@
     svg.call(zoom);
 
     d3.select("#zoom-in").on("click", () => {
-      svg.transition().call(zoom.scaleBy, 1.2);
+      svg.transition().duration(300).call(zoom.scaleBy, 1.2);
     });
 
     d3.select("#zoom-out").on("click", () => {
-      svg.transition().call(zoom.scaleBy, 0.8);
+      svg.transition().duration(300).call(zoom.scaleBy, 0.8);
     });
 
     d3.json('data/europe.topojson').then(data => {
