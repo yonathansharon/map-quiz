@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Europe Map Quiz</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
@@ -16,6 +16,7 @@
             align-items: center;
             background-color: #0a0a0a; /* רקע מאחורי המפה */
             color: #fff;
+            min-height: 100vh; /* מבטיח שהגוף יתפוס לפחות את גובה המסך */
         }
 
         #restart-button {
@@ -34,15 +35,21 @@
         }
 
         #map-container {
-            width: 100%;
+            width: 95%; /* קצת פחות מ-100% כדי להשאיר שוליים קטנים */
             max-width: 1000px;
             background-color: #eeeeee; /* רקע של המפה */
             overflow: hidden;
+            flex-grow: 1; /* מאפשר למכולה לגדול ולתפוס מקום פנוי */
+            margin-bottom: 10px; /* מרווח קטן בין המפה לרשימה */
+            display: flex;
+            align-items: center; /* מרכוז אנכי של ה-SVG בתוך המכולה (אופציונלי) */
+            justify-content: center; /* מרכוז אופקי של ה-SVG בתוך המכולה (אופציונלי) */
         }
 
         svg {
             width: 100%;
-            height: auto;
+            height: auto; /* שמירה על יחס גובה-רוחב */
+            max-height: 95%; /* הגבלה על הגובה המקסימלי בתוך המכולה */
         }
 
         path {
@@ -58,10 +65,11 @@
         }
 
         .guessed {
-            fill: lightgreen !important; /* צבע ירוק בהיר למדינה שנמצאה */
-            stroke: green !important;
-            stroke-width: 2px !important;
-            pointer-events: none !important; /* מניעת אינטראקציה חוזרת */
+         fill: lightgreen !important;
+          stroke: green !important;
+          stroke-width: 2px !important;
+         pointer-events: none !important;
+         opacity: 0.7 !important; /* הוספת !important כדי להגביר את הספציפיות */
         }
 
         .guessed::after {
@@ -75,15 +83,15 @@
         #country-list {
             list-style: none;
             padding: 0;
-            margin: 20px auto 10px;
+            margin: 10px auto 20px; /* מרווח שונה מלמעלה ומלמטה */
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 8px;
             width: 95%;
             max-width: 1000px;
-            max-height: 180px;
-            overflow-y: auto;
+            /* max-height: none; הסרת הגובה המקסימלי כדי לאפשר גלילה אם יש צורך */
+            overflow-y: auto; /* משאירים גלילה למקרה שיש הרבה מדינות */
         }
 
         #country-list li {
@@ -103,10 +111,12 @@
         }
 
         .matched {
-            background-color: lightgreen;
-            border-color: green;
-            color: gray;
-            cursor: not-allowed;
+         background-color: lightgreen !important;
+          border-color: green !important;
+         color: gray !important;
+         cursor: not-allowed !important;
+          opacity: 0.6 !important; /* הוספת !important כדי להגביר את הספציפיות */
+        }
         }
 
         .error {
@@ -128,8 +138,20 @@
 
         @media (max-width: 600px) {
             #country-list {
-                font-size: 0.8em;
-                max-height: 120px;
+                font-size: 1em; /* גודל גופן קצת יותר גדול במובייל */
+                /* max-height: 80vh; אפשר להגדיר גובה מקסימלי יחסי למסך */
+                flex-direction: column; /* סידור המדינות בעמודה אחת במקום בשורות */
+                align-items: center; /* מרכוז המדינות */
+            }
+
+            #country-list li {
+                margin-bottom: 5px; /* מרווח בין פריטים ברשימה במובייל */
+                width: 80%; /* רוחב יותר קטן לפריטים ברשימה */
+                text-align: center; /* מרכוז הטקסט בתוך הפריט */
+            }
+
+            #map-container {
+                margin-top: 20px; /* מרווח עליון למפה במובייל */
             }
         }
     </style>
@@ -178,19 +200,6 @@
         let score = 0;
         let attempts = 0;
         let correctGuesses = 0;
-
-        // הגדרת זום
-        const zoom = d3.zoom()
-            .scaleExtent([1, 8]) // מגבלות זום - אפשר לשנות
-            .on("zoom", function() {
-                svg.selectAll("path").attr("transform", d3.event.transform);
-            });
-
-        svg.call(d3.drag()
-            .on("start", function() {
-                d3.event.sourceEvent.stopPropagation(); // מניעת אירועי גרירה להפריע לזום
-            })
-        ).call(zoom);
 
         d3.json('data/europe.topojson').then(data => {
             const countries = topojson.feature(data, data.objects.europe).features;
@@ -251,13 +260,6 @@
             });
 
             d3.select('#restart-button').on('click', () => location.reload());
-
-            // איפוס זום בלחיצה כפולה על המפה
-            svg.on('dblclick.zoom', () => {
-                svg.transition()
-                    .duration(750)
-                    .call(zoom.transform, d3.zoomIdentity);
-            });
         });
     </script>
 </body>
