@@ -1,235 +1,268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>USA Map Quiz</title>
-  <script src="https://d3js.org/d3.v5.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background-color: #0a0a0a; /* רקע כללי */
-      color: #fff;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>USA Map Quiz</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+        }
 
-    #restart-button {
-      margin: 10px auto;
-      padding: 10px 18px;
-      font-size: 1em;
-      cursor: pointer;
-      background-color: #0077cc;
-      color: white;
-      border: none;
-      border-radius: 5px;
-    }
+        #restart-button {
+            margin: 10px auto;
+            padding: 10px 18px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #0077cc;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
 
-    #restart-button:hover {
-      background-color: #005fa3;
-    }
+        #restart-button:hover {
+            background-color: #005fa3;
+        }
 
-    #map-container {
-      width: 100%;
-      max-width: 1000px;
-      background-color: #eeeeee; /* רקע מתחת למפה */
-      overflow: hidden;
-    }
+        #map-container {
+            width: 95%;
+            max-width: 1000px;
+            background-color: #eeeeee;
+            overflow: hidden;
+            flex-grow: 1;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    svg {
-      width: 100%;
-      height: auto;
-    }
+        svg {
+            width: 100%;
+            height: auto;
+            max-height: 95%;
+        }
 
-    path {
-      fill: #f0f0f0;
-      stroke: #333;
-      stroke-width: 0.5px;
-      transition: all 0.3s ease;
-    }
+        path {
+            fill: #f0f0f0;
+            stroke: #333;
+            stroke-width: 0.5px;
+            transition: all 0.3s ease;
+        }
 
-    path:hover {
-      fill: steelblue;
-      cursor: pointer;
-    }
+        path:hover {
+            fill: steelblue;
+            cursor: pointer;
+        }
 
-    .guessed {
-      stroke: #0077cc !important;
-      stroke-width: 3px !important;
-      fill-opacity: 1 !important;
-    }
+        .guessed {
+            fill: orange !important;
+            stroke: darkorange !important;
+            stroke-width: 2px !important;
+            pointer-events: none !important;
+        }
 
-    #country-list {
-      list-style: none;
-      padding: 0;
-      margin: 20px auto 10px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-      width: 95%;
-      max-width: 1000px;
-      max-height: 180px;
-      overflow-y: auto;
-    }
+        #state-list {
+            list-style: none;
+            padding: 0;
+            margin: 10px auto 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            width: 95%;
+            max-width: 1000px;
+            overflow-y: auto;
+        }
 
-    #country-list li {
-      background-color: #000;
-      border: 1px solid #aaa;
-      padding: 8px 12px;
-      cursor: pointer;
-      border-radius: 5px;
-      font-size: 0.95em;
-      user-select: none;
-      color: #fff;
-    }
+        #state-list li {
+            background-color: #000;
+            border: 1px solid #aaa;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 0.95em;
+            user-select: none;
+            color: #fff;
+        }
 
-    #country-list li.selected {
-      background-color: #0077cc;
-      color: #fff;
-    }
+        #state-list li.selected {
+            background-color: #0077cc;
+            color: #fff;
+        }
 
-    .matched {
-      background-color: lightgreen;
-      border-color: green;
-      color: gray;
-      cursor: not-allowed;
-    }
+        .matched {
+            background-color: lightgray !important;
+            color: red !important;
+            cursor: not-allowed !important;
+            opacity: 0.6 !important;
+            padding-right: 20px !important;
+            position: relative !important;
+        }
 
-    .error {
-      color: red;
-      margin-top: 10px;
-    }
+        .matched::after {
+            content: '✖';
+            font-size: 1em;
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
 
-    #scoreboard {
-      margin-top: 10px;
-      font-size: 1em;
-    }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
 
-    #victory-message {
-      display: none;
-      font-size: 1.2em;
-      color: lightgreen;
-      margin-top: 10px;
-    }
+        #scoreboard {
+            margin-top: 10px;
+            font-size: 1em;
+        }
 
-    @media (max-width: 600px) {
-      #country-list {
-        font-size: 0.8em;
-        max-height: 120px;
-      }
-    }
-  </style>
+        #victory-message {
+            display: none;
+            font-size: 1.2em;
+            color: lightgreen;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+            #state-list {
+                font-size: 1em;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            #state-list li {
+                margin-bottom: 5px;
+                width: 80%;
+                text-align: center;
+            }
+
+            #map-container {
+                margin-top: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <button id="restart-button">Restart Game</button>
+    <button id="restart-button">Restart Game</button>
 
-  <div id="map-container">
-    <svg viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet"></svg>
-  </div>
+    <div id="map-container">
+        <svg viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
 
-  <ul id="country-list"></ul>
-  <div id="feedback"></div>
-  <div id="scoreboard">
-    <strong>Score:</strong> <span id="score">0</span> |
-    <strong>Attempts:</strong> <span id="attempts">0</span>
-  </div>
-  <div id="victory-message"></div>
+    <ul id="state-list"></ul>
 
-  <script>
-    const nameMap = {
-      "01": "Alabama", "02": "Alaska", "04": "Arizona", "05": "Arkansas", "06": "California",
-      "08": "Colorado", "09": "Connecticut", "10": "Delaware", "11": "District of Columbia",
-      "12": "Florida", "13": "Georgia", "15": "Hawaii", "16": "Idaho", "17": "Illinois",
-      "18": "Indiana", "19": "Iowa", "20": "Kansas", "21": "Kentucky", "22": "Louisiana",
-      "23": "Maine", "24": "Maryland", "25": "Massachusetts", "26": "Michigan", "27": "Minnesota",
-      "28": "Mississippi", "29": "Missouri", "30": "Montana", "31": "Nebraska", "32": "Nevada",
-      "33": "New Hampshire", "34": "New Jersey", "35": "New Mexico", "36": "New York",
-      "37": "North Carolina", "38": "North Dakota", "39": "Ohio", "40": "Oklahoma", "41": "Oregon",
-      "42": "Pennsylvania", "44": "Rhode Island", "45": "South Carolina", "46": "South Dakota",
-      "47": "Tennessee", "48": "Texas", "49": "Utah", "50": "Vermont", "51": "Virginia",
-      "53": "Washington", "54": "West Virginia", "55": "Wisconsin", "56": "Wyoming"
-    };
+    <div id="feedback"></div>
 
-    const svg = d3.select("svg");
-    const width = 960;
-    const height = 600;
+    <div id="scoreboard">
+        <strong>Score:</strong> <span id="score">0</span> |
+        <strong>Attempts:</strong> <span id="attempts">0</span>
+    </div>
 
-    const projection = d3.geoAlbersUsa()
-      .scale(1000)
-      .translate([width / 2, height / 2]);
+    <div id="victory-message"></div>
 
-    const path = d3.geoPath().projection(projection);
+    <script>
+        const nameMap = {
+            "01": "Alabama", "02": "Alaska", "04": "Arizona", "05": "Arkansas", "06": "California",
+            "08": "Colorado", "09": "Connecticut", "10": "Delaware", "11": "District of Columbia",
+            "12": "Florida", "13": "Georgia", "15": "Hawaii", "16": "Idaho", "17": "Illinois",
+            "18": "Indiana", "19": "Iowa", "20": "Kansas", "21": "Kentucky", "22": "Louisiana",
+            "23": "Maine", "24": "Maryland", "25": "Massachusetts", "26": "Michigan", "27": "Minnesota",
+            "28": "Mississippi", "29": "Missouri", "30": "Montana", "31": "Nebraska", "32": "Nevada",
+            "33": "New Hampshire", "34": "New Jersey", "35": "New Mexico", "36": "New York",
+            "37": "North Carolina", "38": "North Dakota", "39": "Ohio", "40": "Oklahoma", "41": "Oregon",
+            "42": "Pennsylvania", "44": "Rhode Island", "45": "South Carolina", "46": "South Dakota",
+            "47": "Tennessee", "48": "Texas", "49": "Utah", "50": "Vermont", "51": "Virginia",
+            "53": "Washington", "54": "West Virginia", "55": "Wisconsin", "56": "Wyoming"
+        };
 
-    let selectedCountry = null;
-    let score = 0;
-    let attempts = 0;
-    let correctGuesses = 0;
+        const svg = d3.select("svg");
+        const width = 1000;
+        const height = 600;
 
-    d3.json('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json').then(data => {
-      const states = topojson.feature(data, data.objects.states).features;
+        const projection = d3.geoAlbersUsa()
+            .scale(1000)
+            .translate([width / 2, height / 2]);
 
-      const countryPaths = svg.selectAll('path')
-        .data(states)
-        .enter().append('path')
-        .attr('d', path)
-        .attr('id', d => 'country-' + d.id);
+        const path = d3.geoPath().projection(projection);
 
-      const countryList = d3.select('#country-list');
-      const countryNames = states.map(d => ({
-        id: d.id,
-        name: nameMap[d.id] || d.id,
-        centroid: path.centroid(d)
-      }));
+        let selectedState = null;
+        let score = 0;
+        let attempts = 0;
+        let correctGuesses = 0;
 
-      const countryItems = countryList.selectAll('li')
-        .data(countryNames)
-        .enter().append('li')
-        .attr('id', d => 'country-' + d.id)
-        .text(d => d.name)
-        .on('click', function(d) {
-          if (!d3.select(this).classed('matched')) {
-            countryList.selectAll('li').classed('selected', false);
-            d3.select(this).classed('selected', true);
-            selectedCountry = d;
-            d3.select('#feedback').text('');
-          }
+        d3.json('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json').then(data => {
+            const states = topojson.feature(data, data.objects.states).features;
+
+            const statePaths = svg.selectAll('path')
+                .data(states)
+                .enter().append('path')
+                .attr('d', path)
+                .attr('id', d => 'state-' + d.id);
+
+            const stateList = d3.select('#state-list');
+            const stateNames = states.map(d => ({
+                id: d.id,
+                name: nameMap[d.id] || d.id
+            }));
+
+            const stateItems = stateList.selectAll('li')
+                .data(stateNames)
+                .enter().append('li')
+                .attr('id', d => 'state-' + d.id)
+                .text(d => d.name)
+                .on('click', function(d) {
+                    if (!d3.select(this).classed('matched')) {
+                        stateList.selectAll('li').classed('selected', false);
+                        d3.select(this).classed('selected', true);
+                        selectedState = d;
+                        d3.select('#feedback').text('');
+                    }
+                });
+
+            statePaths.on('click', function(d) {
+                const feedbackElement = d3.select('#feedback');
+                if (selectedState) {
+                    attempts++;
+                    d3.select('#attempts').text(attempts);
+                    if (d.id === selectedState.id) {
+                        score += 10;
+                        correctGuesses++;
+                        d3.select('#score').text(score);
+                        feedbackElement.text('Correct!').classed('error', false);
+                        d3.select(this).classed('guessed', true);
+
+                        const matchedItem = d3.select('#state-' + selectedState.id);
+                        matchedItem.classed('matched', true).classed('selected', false).on('click', null);
+
+                        selectedState = null;
+
+                        if (correctGuesses === stateNames.length) {
+                            d3.select('#victory-message')
+                                .text(`🎉 You won! Final score: ${score} in ${attempts} attempts.`)
+                                .style('display', 'block');
+                        }
+                    } else {
+                        feedbackElement.text('Incorrect! Try again.').classed('error', true);
+                    }
+                } else {
+                    feedbackElement.text('Please select a state name first.').classed('error', true);
+                }
+            });
+
+            d3.select('#restart-button').on('click', () => location.reload());
         });
-
-      countryPaths.on('click', function(d) {
-        const feedbackElement = d3.select('#feedback');
-        if (selectedCountry) {
-          attempts++;
-          d3.select('#attempts').text(attempts);
-          if (nameMap[d.id] === selectedCountry.name) {
-            score += 10;
-            correctGuesses++;
-            d3.select('#score').text(score);
-            feedbackElement.text('Correct!').classed('error', false);
-            d3.select(this).classed('guessed', true).style('pointer-events', 'none');
-            const matchedItem = d3.select('#country-' + selectedCountry.id);
-            matchedItem.classed('matched', true).classed('selected', false).on('click', null);
-            selectedCountry = null;
-
-            if (correctGuesses === countryNames.length) {
-              d3.select('#victory-message')
-                .text(`🎉 You won! Final score: ${score} in ${attempts} attempts.`)
-                .style('display', 'block');
-            }
-          } else {
-            feedbackElement.text('Incorrect! Try again.').classed('error', true);
-          }
-        } else {
-          feedbackElement.text('Please select a state name first.').classed('error', true);
-        }
-      });
-
-      d3.select('#restart-button').on('click', () => location.reload());
-    });
-  </script>
+    </script>
 </body>
 </html>
