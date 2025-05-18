@@ -54,7 +54,7 @@
     svg {
       width: 100%;
       height: auto;
-      max-height: 95%;
+      max-height: 95vh;
     }
 
     path {
@@ -74,13 +74,6 @@
       stroke: darkorange !important;
       stroke-width: 2px !important;
       pointer-events: none !important;
-    }
-
-    .skipped {
-      fill: #aaa !important;
-      stroke: #555 !important;
-      pointer-events: none !important;
-      opacity: 0.6;
     }
 
     .error {
@@ -103,6 +96,26 @@
       font-size: 1.2em;
       color: lightgreen;
       margin-top: 10px;
+    }
+
+    @media (max-width: 600px) {
+      #map-container {
+        height: 70vh;
+      }
+
+      svg {
+        max-height: 100%;
+      }
+
+      #question {
+        font-size: 1.1em;
+        text-align: center;
+      }
+
+      button {
+        font-size: 0.95em;
+        padding: 8px 14px;
+      }
     }
   </style>
 </head>
@@ -130,7 +143,8 @@
   <script>
     const nameMap = {
       "01": "Alabama", "02": "Alaska", "04": "Arizona", "05": "Arkansas", "06": "California",
-      "08": "Colorado", "09": "Connecticut", "10": "Delaware", // "11": "District of Columbia", ← הוסרה
+      "08": "Colorado", "09": "Connecticut", "10": "Delaware",
+      // "11": "District of Columbia", // הוסרה
       "12": "Florida", "13": "Georgia", "15": "Hawaii", "16": "Idaho", "17": "Illinois",
       "18": "Indiana", "19": "Iowa", "20": "Kansas", "21": "Kentucky", "22": "Louisiana",
       "23": "Maine", "24": "Maryland", "25": "Massachusetts", "26": "Michigan", "27": "Minnesota",
@@ -200,14 +214,13 @@
       });
 
       d3.select('#skip-button').on('click', () => {
-  if (!currentTarget) return;
-  d3.select('#feedback').text(`Skipped: ${currentTarget.name}`).classed('error', false);
-  // אין סימון ויזואלי לדילוג
-  const insertIndex = Math.floor(Math.random() * remainingStates.length);
-  remainingStates.splice(insertIndex, 0, currentTarget);
-  currentTarget = null;
-  setTimeout(pickNextState, 700);
-});
+        if (!currentTarget) return;
+        d3.select('#feedback').text(`Skipped: ${currentTarget.name}`).classed('error', false);
+        const insertIndex = Math.floor(Math.random() * remainingStates.length);
+        remainingStates.splice(insertIndex, 0, currentTarget);
+        currentTarget = null;
+        setTimeout(pickNextState, 700);
+      });
 
       d3.select('#restart-button').on('click', () => location.reload());
     });
