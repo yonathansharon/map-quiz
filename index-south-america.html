@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>South America Map Quiz</title>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #0a0a0a;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    #controls {
+      margin: 10px auto;
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 18px;
+      font-size: 1em;
+      cursor: pointer;
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background-color: #005fa3;
+    }
+
+    #map-container {
+      width: 95%;
+      max-width: 1000px;
+      background-color: #eeeeee;
+      overflow: hidden;
+      flex-grow: 1;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      max-height: 95vh;
+    }
+
+    path {
+      fill: #f0f0f0;
+      stroke: #333;
+      stroke-width: 0.5px;
+      transition: all 0.3s ease;
+    }
+
+    path:hover {
+      fill: steelblue;
+      cursor: pointer;
+    }
+
+    .guessed {
+      fill: orange !important;
+      stroke: darkorange !important;
+      stroke-width: 2px !important;
+      pointer-events: none !important;
+    }
+
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+
+    #question {
+      font-size: 1.6em;
+      font-weight: bold;
+      margin: 16px 0;
+      text-align: center;
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 8px 16px;
+      border-radius: 8px;
+    }
+
+    #scoreboard {
+      margin-top: 10px;
+      font-size: 1em;
+    }
+
+    #victory-message {
+      display: none;
+      font-size: 1.2em;
+      color: lightgreen;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+
+      #map-container {
+        height: 80vh;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      svg {
+        height: 100%;
+        width: 100%;
+        max-height: unset;
+      }
+
+      #question {
+        font-size: 1.3em;
+        text-align: center;
+      }
+
+      #controls {
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+      }
+
+      button {
+        font-size: 1em;
+        padding: 10px 16px;
+        width: 80%;
+        max-width: 300px;
+      }
+
+      #scoreboard,
+      #feedback {
+        font-size: 1em;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <button id="restart-button">Restart Game</button>
+    <button id="skip-button">Skip</button>
+  </div>
+
+  <div id="question"></div>
+
+  <div id="map-container">
+    <svg viewBox="0 0 1000 660" preserveAspectRatio="xMidYMid meet"></svg>
+  </div>
+
+  <div id="feedback"></div>
+
+  <div id="scoreboard">
+    <strong>Score:</strong> <span id="score">0</span> |
+    <strong>Attempts:</strong> <span id="attempts">0</span>
+  </div>
+
+  <div id="victory-message"></div>
+
+  <script>
+    const nameMap = {
+      "AR": "Argentina", "BO": "Bolivia", "BR": "Brazil", "CL": "Chile",
+      "CO": "Colombia", "EC": "Ecuador", "GF": "French Guiana", "GY": "Guyana",
+      "PY": "Paraguay", "PE": "Peru", "SR": "Suriname", "UY": "Uruguay",
+      "VE": "Venezuela"
+    };
+
+    const svg = d3.select("svg");
+    const width = 1000;
+    const height = 600;
+    const isMobile = window.innerWidth < 600;
+
+    const projection = d3.geoMercator()
+      .center([-60, -15])
+      .scale(isMobile ? 1000 : 450)
+      .translate([width / 2, height / 2]);
+
+    const path = d3.geoPath().projection(projection);
+
+    let remainingCountries = [];
+    let currentTarget = null;
+    let score = 0;
+    let attempts = 0;
+
+    function pickNextCountry() {
+      if (remainingCountries.length === 0) {
+        d3.select("#victory-message")
+          .text(`🎉 You won! Final score: ${score} in ${attempts} attempts.`)
+          .style("display", "block");
+        d3.select("#question").text('');
+        return;
+      }
+      currentTarget = remainingCountries.pop();
+      d3.select("#question").text(`Where is: ${currentTarget.name}?`);
+    }
+
+    d3.json('https://cdn.jsdelivr.net/npm/@highcharts/map-collection@2.3.0/custom/south-america.topo.json').then(data => {
+      const countries = topojson.feature(data, data.objects.default).features;
+      const validCountries = countries
+        .map(d => ({ id: d.id, name: nameMap[d.id] }))
+        .filter(d => d.name);
+
+      remainingCountries = d3.shuffle(validCountries.slice());
+      pickNextCountry();
+
+      const countryPaths = svg.selectAll('path')
+        .data(countries)
+        .enter().append('path')
+        .attr('d', path)
+        .attr('id', d => 'country-' + d.id);
+
+      countryPaths.on('click', function(d) {
+        const feedback = d3.select('#feedback');
+        if (!currentTarget) return;
+
+        attempts++;
+        d3.select('#attempts').text(attempts);
+
+        if (d.id === currentTarget.id) {
+          score += 10;
+          d3.select('#score').text(score);
+          feedback.text('Correct!').classed('error', false);
+          d3.select(this).classed('guessed', true);
+          currentTarget = null;
+          setTimeout(pickNextCountry, 700);
+        } else {
+          feedback.text('Incorrect! Try again.').classed('error', true);
+        }
+      });
+
+      d3.select('#skip-button').on('click', () => {
+        if (!currentTarget) return;
+        d3.select('#feedback').text(`Skipped: ${currentTarget.name}`).classed('error', false);
+        const insertIndex = Math.floor(Math.random() * remainingCountries.length);
+        remainingCountries.splice(insertIndex, 0, currentTarget);
+        currentTarget = null;
+        setTimeout(pickNextCountry, 700);
+      });
+
+      d3.select('#restart-button').on('click', () => location.reload());
+    });
+  </script>
+</body>
+</html>
